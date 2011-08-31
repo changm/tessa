@@ -1,0 +1,39 @@
+package FlogRayTracer {
+
+
+public class RVector {
+    public var x:Number = 0.0;
+
+    public function RVector(x:Number ) {
+        this.x = x;
+        print(x);
+/*
+        this.y = (y ? y : 0);
+        this.z = (z ? z : 0);
+*/
+    }
+
+/*
+    public static function add(v:RVector, w:RVector):RVector {
+        return new RVector(w.x + v.x, w.y + v.y, w.z + v.z);
+    }
+
+    public function toString():String {
+        return 'RVector [' + this.x + ',' + this.y + ',' + this.z + ']';
+    }
+*/
+}
+
+function renderScene(){
+    var vectorOne:RVector = new RVector(3.14159);
+/*
+    print(vectorOne);
+    var vectorTwo:RVector = new RVector(10, 12, 13);
+    var testVector:RVector = RVector.add(vectorOne, vectorTwo);
+    print(testVector);
+*/
+}
+
+renderScene();
+
+} // package

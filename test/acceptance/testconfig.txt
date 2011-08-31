@@ -1,0 +1,424 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version 1.1 (the
+# "License"); you may not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis, WITHOUT
+# WARRANTY OF ANY KIND, either express or implied. See the License for the specific
+# language governing rights and limitations under the License.
+#
+# created by dschaffe@adobe.com for use with tamarin tests
+#
+# Alternatively, the contents of this file may be used under the terms of either the GNU
+# General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public
+# License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the
+# LGPL are applicable instead of those above. If you wish to allow use of your version of this
+# file only under the terms of either the GPL or the LGPL, and not to allow others to use your
+# version of this file under the terms of the MPL, indicate your decision by deleting provisions
+# above and replace them with the notice and other provisions required by the GPL or the
+# LGPL. If you do not delete the provisions above, a recipient may use your version of this file
+# under the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** */
+
+########################################################################################################################
+# DOCUMENTATION:
+#    the acceptance/testconfig.txt controls when test files and test cases are marked as expected failure and skip for a specific configuration.
+#
+#    the general format for non-comment lines in this file is comma separated:
+#       test ,  configuration  ,  command (expectedfailure, skip,include)   ,  comments
+#
+# test is a regular expression consisting of path to file relative from test/acceptance  ':' (separator) testcase
+#
+# configuration is a regular expression with the format {CPU_ARCH}-{OS}-{VM}-{VERSION}-{VMSWITCH}
+#
+# commands are currently one of : asc.args, expectedfailure, skip, include
+#    expectedfailure - expects the test to fail, comments should provide bug number and a comment
+#    skip - the test is not run, for example the configuration does not support a feature or the file is not a test and is a helper file to another test
+#    include - includes a specific testcase even if the parent has been skipped - overrides any skip command defined for the same configuration
+#    ats_skip - don't generate an ATS swf as these files are not ATS compatible
+#    apiversioning - define test to require apiversioning in the vm
+#    verify_skip - skip test when doing a verify run
+#
+# comments: please include bug reference, date, and reason for the entry
+
+# NOTES:
+# Filename matching:
+#    When more than one test/filename regexp matches, we choose to match to the longest regexp
+#    e.g:
+#       given someDir/.* and someDir/myTestname
+#       someDir/myTestname will take precedence since it has longer total length
+#
+# To specify that a configuration string DOES NOT contain certain strings use Zero-width negative lookahead: (?!regex)
+#    For example, to set an expected failure for all test runs EXCEPT when -Dinterp is used, use the following:
+#    ^((?!Dinterp).)*$
+#
+########################################################################################################################
+
+#  PERMANENT ENTRIES:
+util/shell_ats, .*, skip, shell file for ats media creation
+
+
+# BUGS:
+# Grouped by feature or platform
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=541358
+mmgc/outofmemory , .* , skip, https://bugzilla.mozilla.org/show_bug.cgi?id=541358
+
+####################
+# force JIT -Ojit
+####################
+as3/RuntimeErrors/Error1115NotAConstructor:.*   , .*(-Ojit|-Djitordie).*  , expectedfail , bug https://bugzilla.mozilla.org/show_bug.cgi?id=456852
+as3/Vector/nonindexproperty:index -6.*          , .*((-Ojit|-Djitordie).*)  , expectedfail , bug https://bugzilla.mozilla.org/show_bug.cgi?id=456852
+
+####################
+# abcasm:
+####################
+# inconsistencies in different debug output, need to implement regex matching of diffs
+abcasm/adhoc , .* , skip, inconsistencies in different debug output, need to implement regex matching of diffs
+# abcasm helper, not a test
+abcasm/abs_helper , .* , skip,
+# Test uses abcasm to check a boundary condition, failure is correct result
+abcasm/traitsSparseSlots , .* , expectedfail , Error 1107 is correct output
+# Test uses abcasm to check a boundary condition, failure is correct result
+abcasm/semanticErrorDuplicateSlotName , .* , expectedfail , Error 1107 is correct output
+# Test uses abcasm to check a boundary condition, failure is correct result
+abcasm/funcRedef , .* , expectedfail , Error 1107 is correct output
+# Test not ready for prime-time
+abcasm/stringEscapes , .* , skip,
+# Test is supposed to throw a verifyerror
+abcasm/bug_481171, .*verifyall.*, skip, Intended behaviour is to throw a verifyerror.
+abcasm/nullCheck/CallStatic , .*verifyall.* , expectedfail, Expected failure in -Dverifyall, see https://bugzilla.mozilla.org/show_bug.cgi?id=491356
+
+
+####################
+# Differential testing (avmdiff.py)
+####################
+# sampling only works on debugger for avmdiff skip
+as3/sampling/.*  , .*diff , skip , skip since output differs debugger vs nondebugger
+# mmgc tests fail on avmdiff, does not support passing args to vm
+mmgc/.* , .*diff , skip , skip since avmdiff does not support passing args bug 487841
+# trim down tests to save time
+ecma3/Unicode/.*, .*diff, skip , trim down tests
+ecma3/Date/.*, .*diff, skip, trim down tests
+abcasm/.*, .*diff, skip, trim down tests
+# avmdiff does not handle .exitcode
+ecma3/Exceptions/exception_011_rt , .*diff , expectedfail, known issue: avmdiff does not handle .exitcode
+regress/bug_515935, .*diff, skip, known issue: avmdiff does not handle .exitcode
+regress/bug_520888, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+regress/bug_555102, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+regress/bug_555705, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+regress/bug_558442.*, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+misc/invalid_opcodes, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+regress/bug_555542, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+regress/bug_555568, .*diff, skip, stack trace not handled by avmdiff https://bugzilla.mozilla.org/show_bug.cgi?id=559227
+
+# specific skips when running differential testing between 32bit and 64bit shells
+as3/RuntimeErrors/Error1115NotAConstructor , .*3264-diff , skip , bug https://bugzilla.mozilla.org/show_bug.cgi?id=456852
+as3/Vector/nonindexproperty , .*3264-diff , skip , bug https://bugzilla.mozilla.org/show_bug.cgi?id=456852
+ecma3/Math/e15_8_2_16 , .*3264-diff , skip , https://bugzilla.mozilla.org/show_bug.cgi?id=521245
+ecma3/Math/e15_8_2_18 , .*3264-diff , skip , https://bugzilla.mozilla.org/show_bug.cgi?id=521245
+ecma3/Math/e15_8_2_7 , .*3264-diff , skip , https://bugzilla.mozilla.org/show_bug.cgi?id=521245
+
+####################
+# Number
+####################
+ecma3/Number/e15_7_4_6_1:Section R-(1|2|3|4|5|6|7|8|10|11|12|13|14|16|17) .* , ^((?!diff).)*$ , expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=513039
+ecma3/Number/e15_7_4_6_1:Section R-(18|19) .* , ^((?!diff).)*$ , expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=478796
+ecma3/Number/e15_7_4_6_1:Section C , ^((?!diff).)*$ , expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=478804
+ecma3/Number/e15_7_4_7_1:Section R-1 , ^((?!diff).)*$ , expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=442974
+
+
+####################
+# String
+####################
+ecma3/String/split_504567:'abab',    ^((?!diff).)*$   , expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=504567
+ecma3/String/split_504567:'babab',   ^((?!diff).)*$   , expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=504567
+
+####################
+# Vector
+####################
+as3/Vector/concat:concat multiple int vectors, .*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=504525
+
+####################
+# Array
+####################
+as3/Array/deleteElementWhileIterating, .*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=553088
+as3/Array/forEach:callbackfn is called only for elements of the array.*, .* , expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=553088
+as3/Array/forEach:elements that are deleted.*, .* , expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=553088
+as3/Array/forEach:If IsCallable\(callbackfn\) is false.*, .*, expectedfail, need to file bug
+
+
+
+
+####################
+# Windows Mobile
+####################
+mops/mops, arm-winmobile-tvm.*, skip, multiple abc files not supported on winmo devices
+abcasm/.*, arm-winmobile-tvm.*, skip, multiple abc files not supported on winmo devices
+ecma3/Math/e15_8_2_17_1:Math.sqrt\(3\) = 1.7320508075688774      ,   .*winmobile.*              ,  expectedfail   ,   https://bugzilla.mozilla.org/show_bug.cgi?id=429673
+ecma3/Expressions/e11_2_1_1, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+ecma3/Expressions/e11_4_6, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+ecma3/RegExp/eperlstress_001, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+ecma3/RegExp/eperlstress_002, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+ecma3/GlobalObject/e15_1_2_3_1, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+ecma3/String/e15_5_3_2_1, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+ecma3/TypeConversion/e9_3_1_1, arm-winmobile.*-debug, expectedfail, bug https://bugzilla.mozilla.org/show_bug.cgi?id=544862
+
+
+####################
+# Android
+####################
+regress/bug_515935 , arm-android.*, skip, https://bugzilla.mozilla.org/show_bug.cgi?id=547282
+
+####################
+# ARM
+####################
+# do not use wildcard match (.*) at end, use (?<!-deep) so -deep ending will not match, want it to run in -deep phase
+ecma3/Unicode/u5000_CJKUnifiedIdeographs , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/u6000_CJKUnifiedIdeographs , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/u7000_CJKUnifiedIdeographs , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/u8000_CJKUnifiedIdeographs , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/u9000_CJKUnifiedIdeographs , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/uE000_PrivateUseArea , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/u3400_CJKUnifiedIdeographsExtensionA , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/uAC00_HangulSyllables , arm-.*(?<!-deep)$ , skip , test runs too slowly
+ecma3/Unicode/uA000_YiSyllables, arm-.*(?<!-deep)$ , skip, tests run too slowly on winmo
+mops/mops , arm-.*(?<!-deep)$ , skip , test runs too slowly
+regress/bug_515935 , arm-lnx.* , skip , bug https://bugzilla.mozilla.org/show_bug.cgi?id=547282
+
+
+
+####################
+# Windows Mobile Emulator
+####################
+# emulator is not using DST by default
+# do not use wildcard match (.*) at end, fully specify matches so -deep ending will not match
+ecma3/Date/e15_9_5_14, arm-winmobile-emulator-tvm-.*(?<!-deep)$, skip, emulator DST problem
+ecma3/Date/e15_9_5_34_1, arm-winmobile-emulator-tvm-.*(?<!-deep)$, skip, emulator DST problem
+ecma3/Date/e15_9_5_35_1, arm-winmobile-emulator-tvm-.*(?<!-deep)$, skip, emulator DST problem
+ecma3/Date/e15_9_5_10, arm-winmobile-emulator-tvm-.*(?<!-deep)$, skip, tests run too slowly on winmo
+
+as3/RuntimeErrors/Error1115NotAConstructor:.* , arm-winmobile-emulator.*  , skip , bug https://bugzilla.mozilla.org/show_bug.cgi?id=456852
+as3/Vector/nonindexproperty:index -6.*        , arm-winmobile-emulator.*  , skip , bug https://bugzilla.mozilla.org/show_bug.cgi?id=456852
+
+regress/bug_555568, arm-winmobile-emulator.*, skip , https://bugzilla.mozilla.org/show_bug.cgi?id=562335
+regress/bug_558442a, arm-winmobile-emulator.*, skip , https://bugzilla.mozilla.org/show_bug.cgi?id=562335
+
+
+####################
+# skip slow tests in test phase, -Dgreedy passes
+####################
+ecma3/Unicode/u3400_CJKUnifiedIdeographsExtensionA,((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/u5000_CJKUnifiedIdeographs,((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/u6000_CJKUnifiedIdeographs,((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/u7000_CJKUnifiedIdeographs,((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/u9000_CJKUnifiedIdeographs,((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/u9000_CJKUnifiedIdeographs,((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/uE000_PrivateUseArea, ((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+ecma3/Unicode/uAC00_HangulSyllables, ((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+mops/mops, ((sparc-sol|x64-win|ppc-mac|ppc64-mac)-tvm-debug(|debugger)|.*-Dgreedy), skip, bug 499685 skip slow tests
+regress/bug_483783, .*, skip, skip slow tests - https://bugzilla.mozilla.org/show_bug.cgi?id=483783
+misc/catchableTimeout, .*, skip, skip slow tests
+misc/doubleTimeout, .*, skip, skip slow tests
+spidermonkey/js1_5/Array/regress-157652, .*, skip, skip slow tests
+spidermonkey/js1_5/Regress/regress-203278-1, .*, skip, skip slow tests
+spidermonkey/js1_5/Regress/regress-360969-0(5|6), .*, skip, skip slow tests
+spidermonkey/js1_5/Regress/regress-80981, .*, skip, skip slow tests
+spidermonkey/js1_5/Regress/regress-96128-n, .*, skip, skip slow tests
+spidermonkey/js1_6/extensions/regress-456826, .*, skip, skip slow tests
+misc/testJitordieSwitch, .*, skip, skip slow tests
+
+####################
+# run slow tests in deep test phase
+####################
+ecma3/Unicode/u3400_CJKUnifiedIdeographsExtensionA,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/u5000_CJKUnifiedIdeographs,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/u6000_CJKUnifiedIdeographs,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/u7000_CJKUnifiedIdeographs,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/u9000_CJKUnifiedIdeographs,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/u9000_CJKUnifiedIdeographs,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/uE000_PrivateUseArea,.*deep, include, include slow tests in deep phase
+ecma3/Unicode/uAC00_HangulSyllables,.*deep, include, include slow tests in deep phase
+# bug 505982
+mops/mops,^((?!ppc-mac-tvm-debug-).).*deep, include, include slow tests in deep phase
+regress/bug_483783, .*deep, include, include slow tests - https://bugzilla.mozilla.org/show_bug.cgi?id=483783
+misc/catchableTimeout, .*deep, include, include slow tests in deep phase
+misc/doubleTimeout, .*deep, include, include slow tests in deep phase
+spidermonkey/js1_5/Array/regress-157652, .*deep, include, include slow tests in deep phase
+spidermonkey/js1_5/Regress/regress-203278-1, .*deep, include, include slow tests in deep phase
+spidermonkey/js1_5/Regress/regress-360969-0(5|6), .*deep, include, include slow tests in deep phase
+spidermonkey/js1_5/Regress/regress-80981, .*deep, include, include slow tests in deep phase
+spidermonkey/js1_5/Regress/regress-96128-n, .*deep, include, include slow tests in deep phase
+spidermonkey/js1_6/extensions/regress-456826, .*deep, include, include slow tests in deep phase
+misc/testJitordieSwitch, .*deep, include, include slow tests in deep phase
+
+####################
+# verifier
+####################
+ecma3/Statements/eforin_001_500476, .*-Dverifyall.*, skip, https://bugzilla.mozilla.org/show_bug.cgi?id=500476
+as3/Statements/for-each-in/eforeachin_001_500476, .*-Dverifyall.*, skip, https://bugzilla.mozilla.org/show_bug.cgi?id=500476
+regress/bug_498979, .*-Dverifyall.*, skip, https://bugzilla.mozilla.org/show_bug.cgi?id=498979
+regress/bug_555705, .*-Dverifyall.*, skip, test throws an expected verifyerror that is normally caught by the test itself
+
+####################
+# Sampling
+####################
+# Assertion failed: "(((start_event == (PolicyEvent)(ev - 1))))" (".\\GC.cpp":461)
+# Disabling test until this can be properly investigated
+# Re-enabling to get a better diagnosis; I've made it print a better error.  --lars
+# as3/sampling/Callback:.* ,  .* ,  skip , https://bugzilla.mozilla.org/show_bug.cgi?id=507685
+# ProcessSampling:GetSizeSamples intermittently fails
+as3/sampling/ProcessSampling ,  .* ,  skip , https://bugzilla.mozilla.org/show_bug.cgi?id=476864
+
+####################
+# ATS Skipped tests - These tests will not be exported when generating ATS swfs
+####################
+misc/isGlobalObject.as, .*, ats_skip, uses avmplus.System.isGlobal
+regress/vector_domain_bug.as, .*, ats_skip, uses avmplus::Domain
+as3/ShellClasses/.*, .*, ats_skip, Tests avmplus ShellClasses
+as3/sampling/.*, .*, ats_skip, sampling tests
+as3/DescribeType/.*, .*, ats_skip, https://bugzilla.mozilla.org/show_bug.cgi?id=520082
+ecma3/Exceptions/exception_011_rt.as, .*, ats_skip, test purposefully throws an uncaught error
+mmgc/.*, .*, ats_skip, mmgc testsf
+abcasm/.*, .*, ats_skip, abcasm tests
+mops/.*, .*, ats_skip, mops test - we don't have source to generate swf
+regress/vector_domain_bug, .*, ats_skip, uses avmplus.Domain
+as3/RuntimeErrors/Error1034TypeCoercionFailed, .*, ats_skip, -AS3 switch breaks test
+ecma3/Exceptions/exception_011_rt, .*, ats_skip, test throws an undefined which is not catchable
+ecma3/Unicode/u3400_CJKUnifiedIdeographsExtensionA,.*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/u5000_CJKUnifiedIdeographs,.*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/u6000_CJKUnifiedIdeographs,.*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/u7000_CJKUnifiedIdeographs,.*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/u9000_CJKUnifiedIdeographs,.*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/u9000_CJKUnifiedIdeographs,.*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/uE000_PrivateUseArea, .*, ats_skip, bug 499685 skip slow tests
+ecma3/Unicode/uAC00_HangulSyllables, .*, ats_skip, bug 499685 skip slow tests
+
+####################
+#  API Versioning Tests
+####################
+versioning/.*, .*, apiversioning, skip versioning when not defined in avm
+
+
+####################
+#  --verify skips
+####################
+abcasm/.*, .*, verify_skip, abcasm tests not compatible with --verify
+
+####################
+# AOT specific
+####################
+as3/sampling/FunctionEntry,		.*AOT.*	, skip, AOT does not yet support profiling
+as3/sampling/InvocationSampling,	.*AOT.*	, skip, AOT does not yet support profiling
+as3/ShellClasses/Domain.as,		.*AOT.*	, skip, AOT does not support loadBytes()
+regress/vector_domain_bug,		.*AOT.*	, skip, AOT does not support loadBytes()
+
+####################
+# Migrated spidermonkey tests
+####################
+
+# Investigating these failures
+spidermonkey/js1_2/regexp/special_characters:'xa\\f\\n\\r\\t\\vbz'.*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551718
+
+spidermonkey/js1_5/Array/regress-345961:Array.prototype.shift should preserve holes after shift, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=345961
+
+spidermonkey/js1_5/Array/regress-364104:\[2\]\.lastIndexOf\(2. -5\).*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=364104
+spidermonkey/js1_5/Array/regress-364104:\[2\]\.lastIndexOf\(2. -2\).*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=364104
+spidermonkey/js1_5/Array/regress-364104:\[2. 3\]\.lastIndexOf\(2. -3\).*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=364104
+
+spidermonkey/js1_5/Exceptions/regress-123002:(^Class|^Section), .*, expectedfail, Class.constructor.length should list number of params in constructor function?
+
+
+spidermonkey/js1_5/Function/regress-364023.as, .*, skip, uses eval
+spidermonkey/js1_5/Regress/regress-159334, .*, skip, need to replicate without eval
+
+spidermonkey/js1_5/GC/.*, .*, skip, GC tests for spidermonkey
+
+spidermonkey/js1_5/Object/regress-308806-01, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=550358
+
+spidermonkey/js1_5/Regress/regress-58116.as, .*, skip, locale-specific test: https://bugzilla.mozilla.org/show_bug.cgi?id=564127
+
+spidermonkey/js1_5/Regress/regress-104077, .*, skip, verifyerror: https://bugzilla.mozilla.org/show_bug.cgi?id=550512
+spidermonkey/js1_5/Regress/regress-140974:^Section [3-6].*, .*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=550530
+
+spidermonkey/js1_5/Regress/regress-169559, .*, skip, need to investigate if global performance is really an issue
+spidermonkey/js1_5/Regress/regress-174709, .*, skip, need to figure out what test is trying to do
+spidermonkey/js1_5/Regress/regress-179524, .*, skip, needs investigation, may not have to port this one over
+
+# Test Requires building a large string (previously evaluated using eval or Function Body form)
+spidermonkey/js1_5/Regress/regress-191633, .*, skip, test builds very large string with comments and then evals it - may need to create huge file
+spidermonkey/js1_5/Regress/regress-367561-01, .*, skip, need to build large test string
+spidermonkey/js1_5/Regress/regress-367561-03, .*, skip, need to build large test string
+spidermonkey/js1_5/Regress/regress-396684, .*, skip, need to build large test string
+spidermonkey/js1_5/String/regress-179068, .*,  skip, need to build large test string
+spidermonkey/js1_5/Expressions/regress-394673, .*, skip, need to figure out a way to evaluate a long long chain of && ||
+spidermonkey/js1_5/Regress/regress-290575, .*, skip, test evaluates function with 32768 arguments - need to convert to not use Function Body or eval
+
+spidermonkey/js1_5/Regress/regress-191668, .*, skip, should (0 <!- 0) be legal?
+spidermonkey/js1_5/Regress/regress-211590, .*, skip, need to investigate how randoms are generated - i believe we only use 32 bit integers to gen
+
+spidermonkey/js1_5/Regress/regress-303213, .*, skip, how do we handle out of memory errors?
+spidermonkey/js1_5/Regress/regress-3649-n, .*, skip, out of memory
+spidermonkey/js1_5/Regress/regress-312588, .*, skip, out of memory
+spidermonkey/js1_5/Regress/regress-310993, .*, skip, how should e4x comments behave in as3?
+spidermonkey/js1_5/Regress/regress-311071, .*, skip, how should e4x comments behave in as3?
+spidermonkey/js1_5/Regress/regress-31255, .*, skip, how should e4x comments behave in as3?
+spidermonkey/js1_5/Regress/regress-334807-0.*, .*, skip, need to investigate if this is a legit bug
+spidermonkey/js1_5/Regress/regress-352009, .*, skip, should array comprehension work?
+spidermonkey/js1_5/Regress/regress-511859:valid sequence U\+(800|10000|10FFFF), ^((?!diff).)*$, expectedfail, need to investigate
+
+spidermonkey/js1_5/Regress/regress-230216-1:Section 1.*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=550976
+spidermonkey/js1_5/Regress/regress-247179:RegExp \\b.*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=550984
+spidermonkey/js1_5/Regress/regress-248444:.*Section (4|5).*, ^((?!diff).)*$ , expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=550987
+spidermonkey/js1_5/Regress/regress-252892:Section (5|7).*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=550990
+
+spidermonkey/js1_5/Regress/regress-271716-n, .*, skip, takes too long to run - tries to crash by doing while (1) a=new Array(a) - possibly run in deep?
+
+spidermonkey/js1_5/Regress/regress-274035:Array.prototype.(concat|splice).*, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551032
+
+spidermonkey/js1_5/Regress/regress-280769-(4|5), ^((?!diff).)*$, expectedfail, Needs further investigation into what test is trying to do
+
+spidermonkey/js1_5/Regress/regress-356693, .*, expectedfail, https://bugs.adobe.com/jira/browse/ASC-4024
+
+spidermonkey/js1_5/Regress/regress-438415-02, ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551202
+spidermonkey/js1_5/Regress/regress-58116:^.*Section (3|4).*, x64-lnx.*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551227
+spidermonkey/js1_5/Regress/regress-58116:^.*Section (3|4|6).*, .*(mac|x86-lnx|arm-lnx|sparc-sol).*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551227
+spidermonkey/js1_5/Regress/regress-58116, .*-diff, skip, skip in diff testing
+spidermonkey/js1_5/Regress/regress-261887, .*-diff, skip, skip in diff testing as output can vary somewhat
+
+spidermonkey/js1_5/Scope/regress-185485:Section (2|5), ^((?!diff).)*$, expectedfail, https://bugs.adobe.com/jira/browse/ASC-4026
+spidermonkey/js1_5/Scope/scope-004:Section (6|7).*, ^((?!diff).)*$, expectedfail, https://bugs.adobe.com/jira/browse/ASC-4027
+
+# spidermonkey wordcode issues
+spidermonkey/js1_5/Regress/regress-329383:.*atan2\(-0.*, .*(wordcode|jit).*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551587
+spidermonkey/js1_5/Regress/regress-329383:.*1/-0.*, .*(wordcode|jit).*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=551587
+
+spidermonkey/js1_5/Array/regress-157652, arm.*, skip, test runs out of memory on devices
+spidermonkey/js1_5/Function/regress-338121-.*, arm.*, skip, test runs out of memory on devices
+spidermonkey/js1_5/Function/regress-338001, arm.*, skip, test runs out of memory on devices
+
+spidermonkey/js1_5/Regress/regress-98901, .*, skip, https://bugs.adobe.com/jira/browse/ASC-4041
+
+### Spidermonkey JS1_6 ###
+spidermonkey/js1_6/Array/regress-290592:.*length, ^((?!diff).)*$, expectedfail, related to https://bugzilla.mozilla.org/show_bug.cgi?id=551032
+spidermonkey/js1_6/Array/regress-290592:(Array.forEach.*(mutate|on sparse array)|sparsestrings: every.*), ^((?!diff).)*$, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=553088
+spidermonkey/js1_6/Array/regress-304828, .*, skip, Array methods on String not supported
+
+spidermonkey/js1_6/Array/regress-386030, .*, skip, https://bugs.adobe.com/jira/browse/ASL-55
+spidermonkey/js1_6/extensions/regress-312385-01, .*, skip, uses eval
+
+####################
+# End spidermonkey tests
+####################
+
+as3/sampling/BackwardBranches, sparc-sol.*, skip, https://bugzilla.mozilla.org/show_bug.cgi?id=551173
+abcasm/bug_554915b, .*wordcode.*, expectedfail, https://bugzilla.mozilla.org/show_bug.cgi?id=554915
+
+#############################
+## Sampling failures on SPARC
+#############################
+as3/sampling/Callback:.* ,  sparc-.*debugger.* ,  skip , https://bugzilla.mozilla.org/show_bug.cgi?id=551173
+as3/sampling/FunctionEntry:.* ,  sparc-.*debugger.* ,  skip , https://bugzilla.mozilla.org/show_bug.cgi?id=551173
